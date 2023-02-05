@@ -7,6 +7,7 @@
 import requests
 import pandas as pd
 import numpy as np
+import json
 from datetime import datetime
 import api_key
 
@@ -91,3 +92,55 @@ def get_hist_quotes_to_from(symbol_list, from_date, to_date):
         # Use the new column as the index when concatenating with df
         df = pd.concat([df, symbol_df.set_index('id')], ignore_index=False, sort=False, axis=0)
     return df
+
+    # GET CANDLES  ###ONLY CONFIGURED FOR DATES AT THIS TIME, NOT FOR LOWER TF
+
+def get_candles(symbol, from_date, to_date, res):
+    # 
+    #
+    # https://api.marketdata.app/v1/stocks/candles/D/AAPL?from=2020-01-01&to=2020-12-31
+
+    """:Minutely Resolutions: (minutely, 1, 3, 5, 15, 30, 45, ...)
+        :Hourly Resolutions: (hourly, H, 1H, 2H, ...)
+        :Daily Resolutions: (daily, D, 1D, 2D, ...)
+        :Weekly Resolutions: (weekly, W, 1W, 2W, ...)
+        :Monthly Resolutions: (monthly, M, 1M, 2M, ...)
+        :Yearly Resolutions:(yearly, Y, 1Y, 2Y, ...)
+    """
+        
+    url = 'https://api.marketdata.app/v1/stocks/candles/'  #AAPL/?monthly=true&dateformat=timestamp
+    
+    
+    headers = {'Authorization': api_key.API_KEY}
+
+    path = f'{res}/{symbol}/?from={from_date}&to={to_date}'
+
+    final_url = url + path
+    candles = requests.get(final_url, headers=headers)
+    candles = candles.text
+    candles_pd = json.loads(candles)
+    candles_hist = pd.DataFrame(candles_pd)
+    candles_hist['symbol'] = symbol
+    # Convert the Unix time column to a datetime column in UTC and then convert to Eastern Standard Time (EST)
+    candles_hist['datetime_est'] = pd.to_datetime(candles_hist['t'], unit='s', utc=True).dt.tz_convert('US/Eastern')
+
+    # Format the datetime_est column as a string with the desired format
+    #xlk_hist['datetime_est_formatted'] = xlk_hist['datetime_est'].dt.strftime('%Y-%m-%d %H:%M:%S')
+
+    candles_hist['datetime_est_formatted'] = candles_hist['datetime_est'].dt.strftime('%Y-%m-%d')  ## Only Date
+    # convert datetime_est_formatted column to just date
+    # candles_hist['datetime_est_formatted'] = pd.to_datetime(candles_hist['datetime_est_formatted'])
+    
+    # rename the columns
+    columns = {
+        'c': 'close',
+        'h': 'high',
+        'l': 'low',
+        'o': 'open',
+        'v': 'volume',
+        'datetime_est_formatted': 'date'
+    }
+    candles_hist.rename(columns=columns, inplace=True)
+    candles_hist.drop(['s', 't', 'datetime_est'], axis=1, inplace=True)
+    candles_hist = candles_hist.reindex(columns=['symbol','date', 'close', 'high', 'low', 'open', 'volume'])
+    return candles_hist
