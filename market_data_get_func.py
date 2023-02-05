@@ -100,7 +100,8 @@ def get_candles(symbol, from_date, to_date, res):
     
     # https://api.marketdata.app/v1/stocks/candles/D/AAPL?from=2020-01-01&to=2020-12-31
 
-    """:Minutely Resolutions: (minutely, 1, 3, 5, 15, 30, 45, ...)
+    """ :Date Format: ('2023-01-15')
+        :Minutely Resolutions: (minutely, 1, 3, 5, 15, 30, 45, ...)
         :Hourly Resolutions: (hourly, H, 1H, 2H, ...)
         :Daily Resolutions: (daily, D, 1D, 2D, ...)
         :Weekly Resolutions: (weekly, W, 1W, 2W, ...)
@@ -114,6 +115,50 @@ def get_candles(symbol, from_date, to_date, res):
     headers = {'Authorization': api_key.API_KEY}
 
     path = f'{res}/{symbol}/?from={from_date}&to={to_date}&dateformat=timestamp'
+
+    final_url = url + path
+    candles = requests.get(final_url, headers=headers)
+    candles = candles.text
+    candles_pd = json.loads(candles)
+    candles_hist = pd.DataFrame(candles_pd)
+    candles_hist['symbol'] = symbol
+       
+    # rename the columns
+    columns = {
+        'c': 'close',
+        'h': 'high',
+        'l': 'low',
+        'o': 'open',
+        'v': 'volume',
+        't': 'date'
+    }
+    candles_hist.rename(columns=columns, inplace=True)
+    candles_hist.drop(['s'], axis=1, inplace=True)
+    candles_hist = candles_hist.reindex(columns=['symbol','date', 'close', 'high', 'low', 'open', 'volume'])
+    return candles_hist
+
+
+def get_candles_from(symbol, from_date, res):
+    # mf.get_candles('MSFT', '2020-02-03','D')
+    
+    # url2 = "https://api.marketdata.app/v1/stocks/candles/D/AAPL?from=2020-12-31&countback=252"
+
+    """ :Date Format: ('2023-01-15')
+        :Minutely Resolutions: (minutely, 1, 3, 5, 15, 30, 45, ...)
+        :Hourly Resolutions: (hourly, H, 1H, 2H, ...)
+        :Daily Resolutions: (daily, D, 1D, 2D, ...)
+        :Weekly Resolutions: (weekly, W, 1W, 2W, ...)
+        :Monthly Resolutions: (monthly, M, 1M, 2M, ...)
+        :Yearly Resolutions:(yearly, Y, 1Y, 2Y, ...)
+    """
+        
+    url = 'https://api.marketdata.app/v1/stocks/candles/'  #AAPL/?monthly=true&dateformat=timestamp
+    
+    
+    headers = {'Authorization': api_key.API_KEY}
+
+    #path = f'{res}/{symbol}/?from={from_date}&countback={count_back}&dateformat=timestamp'
+    path = f'{res}/{symbol}/?from={from_date}&dateformat=timestamp'
 
     final_url = url + path
     candles = requests.get(final_url, headers=headers)
