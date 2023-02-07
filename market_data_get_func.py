@@ -91,7 +91,7 @@ def get_options_chain_strike(symbol, strike):
     chain_expr = requests.get(final_url, headers=headers)
     return chain_expr.text
 
-def get_hist_quotes_to_from(symbol_list, from_date, to_date):
+def get_hist_quotes_from_to(symbol_list, from_date, to_date):
 
     # This function still needs a bit of work.  Getting an error message when going to far out on the term.  thinking it may be that
     # the OptionSymbol is listed, but no quote...  Need to study future...  But Seems to work ok except for those exceptions at the moment.
@@ -146,7 +146,7 @@ def get_hist_quotes_to_from(symbol_list, from_date, to_date):
 
     
 
-def get_candles_to_from(symbol, from_date, to_date, res):
+def get_candles_from_to(symbol, from_date, to_date, res):
     # mf.get_candles('MSFT', '2023-02-03', '2023-02-04', 'D')
     
     # https://api.marketdata.app/v1/stocks/candles/D/AAPL?from=2020-01-01&to=2020-12-31
