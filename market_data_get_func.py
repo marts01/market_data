@@ -11,7 +11,7 @@ import json
 from datetime import datetime
 import api_key
 
-def get_options_chainbyExpr(symbol, expiry_date):
+def get_options_chain_expr(symbol, expiry_date):
     # mf.get_options_chainbyExpr('SPXW', '2023-02-17')
 
     url = 'https://api.marketdata.app/v1/options/chain/'
@@ -29,11 +29,26 @@ def get_options_chainbyExpr(symbol, expiry_date):
 
     return chain_expr.text
 
-def get_options_chainbyMonth(symbol):
+def get_options_chain_weekly(symbol):
     # mf.get_options_chainbyMonth('SPX')
-    #https://api.marketdata.app/v1/options/chain/AAPL/?monthly=true&dateformat=timestamp
+    #https://api.marketdata.app/v1/options/chain/AAPL/?monthly=false&dateformat=timestamp
     
     url = 'https://api.marketdata.app/v1/options/chain/'  #AAPL/?monthly=true&dateformat=timestamp
+    
+    
+    headers = {'Authorization': api_key.API_KEY}
+
+    path = f'{symbol}/?monthly=false&dateformat=timestamp'
+
+    final_url = url + path
+    chain_expr = requests.get(final_url, headers=headers)
+    return chain_expr.text
+
+def get_options_chain_monthly(symbol):
+    # mf.get_options_chainbyWeek('SPX')
+    #https://api.marketdata.app/v1/options/chain/AAPL/?monthly=true&dateformat=timestamp
+    
+    url = 'https://api.marketdata.app/v1/options/chain/'  #AAPL/?monthly=true&dateformat=timestam
     
     
     headers = {'Authorization': api_key.API_KEY}
@@ -45,8 +60,42 @@ def get_options_chainbyMonth(symbol):
     return chain_expr.text
 
 
+def get_options_chain_year(symbol, year):
+    # mf.get_options_chainbyWeek('SPX')
+    # https://api.marketdata.app/v1/options/chain/AAPL/?year=2022&dateformat=timestamp
+    
+    url = 'https://api.marketdata.app/v1/options/chain/'  #AAPL/?monthly=true&dateformat=timestam
+    
+    
+    headers = {'Authorization': api_key.API_KEY}
+
+    path = f'{symbol}/?year={year}&dateformat=timestamp'
+
+    final_url = url + path
+    chain_expr = requests.get(final_url, headers=headers)
+    return chain_expr.text
+
+
+def get_options_chain_strike(symbol, strike):
+    # mf.get_options_chainbyWeek('SPX')
+    #https://api.marketdata.app/v1/options/chain/AAPL/?strike=150&dateformat=timestamp
+    
+    url = 'https://api.marketdata.app/v1/options/chain/'  #AAPL/?monthly=true&dateformat=timest
+    
+    
+    headers = {'Authorization': api_key.API_KEY}
+
+    path = f'{symbol}/?strike={strike}&dateformat=timestamp'
+
+    final_url = url + path
+    chain_expr = requests.get(final_url, headers=headers)
+    return chain_expr.text
 
 def get_hist_quotes_to_from(symbol_list, from_date, to_date):
+
+    # This function still needs a bit of work.  Getting an error message when going to far out on the term.  thinking it may be that
+    # the OptionSymbol is listed, but no quote...  Need to study future...  But Seems to work ok except for those exceptions at the moment.
+
     # mf.get_hist_quotes_to_from(spx_list, '2023-01-26', '2023-02-04')
     
     #https://api.marketdata.app/v1/options/quotes/AAPL250117C00150000/?from=2023-01-01&to=2023-01-31&dateformat=timestamp
@@ -67,9 +116,11 @@ def get_hist_quotes_to_from(symbol_list, from_date, to_date):
         # Concatenate the base URL and the path
         final_url = url + path
         # Make the request
+    
         response = requests.get(final_url, headers=headers)
         # Extract the data from the response
         data = response.json()
+        
         # Create a new DataFrame with the data and a column for the symbol
         symbol_df = pd.DataFrame({'updated': data.get('updated', np.nan),
                          'symbol': symbol,
@@ -93,9 +144,9 @@ def get_hist_quotes_to_from(symbol_list, from_date, to_date):
         df = pd.concat([df, symbol_df.set_index('id')], ignore_index=False, sort=False, axis=0)
     return df
 
-    # GET CANDLES  ###NEED TO FINISH DATE AND TIME COLUMNS
+    
 
-def get_candles(symbol, from_date, to_date, res):
+def get_candles_to_from(symbol, from_date, to_date, res):
     # mf.get_candles('MSFT', '2023-02-03', '2023-02-04', 'D')
     
     # https://api.marketdata.app/v1/stocks/candles/D/AAPL?from=2020-01-01&to=2020-12-31
