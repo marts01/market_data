@@ -11,6 +11,26 @@ import json
 from datetime import datetime
 import api_key
 
+def build_option_symbol(symbol, expiry_date, option_type, strike_price):
+
+    # build_option_symbol('IBM', '2023-02-10', 'C', '140')
+    """
+    Get Live quotes of an option from a beginning date.
+
+    example       : build_option_symbol('IBM', '2023-02-10', 'C', '140')
+    symbol        : Symbol of the underlying asset
+    expiry_date   : Expiry date of the option in the format 'YYYY-MM-DD'
+    option_type   : Option type, either 'C' (Call) or 'P' (Put)
+    strike_price  : Strike price of the option
+          
+    """
+    expiry_date = datetime.strptime(expiry_date, '%Y-%m-%d')
+    expiry_date = expiry_date.strftime('%y%m%d')
+    strike_price = '{:0>8}'.format(int(strike_price) * 1000)
+    option_symbol = f'{symbol}{expiry_date}{option_type}{strike_price}'
+
+    return option_symbol
+
 def get_options_chain_expr(symbol, expiry_date):
     # mf.get_options_chainbyExpr('SPXW', '2023-02-17')
 
@@ -144,7 +164,42 @@ def get_hist_quotes_from_to(symbol_list, from_date, to_date):
         df = pd.concat([df, symbol_df.set_index('id')], ignore_index=False, sort=False, axis=0)
     return df
 
+
+
+def get_options_quote_live(symbol, expiry_date, option_type, strike_price):
+
+    # get_options_quote_live('IBM', '2023-02-10', 'C', '140')
+    """
+    Get Live quotes of an option from a beginning date.
+
+    symbol        : Symbol of the underlying asset
+    expiry_date   : Expiry date of the option in the format 'YYYY-MM-DD'
+    option_type   : Option type, either 'C' (Call) or 'P' (Put)
+    strike_price  : Strike price of the option
     
+        
+    Returns:
+        JSON response from the API.
+    """
+    expiry_date = datetime.strptime(expiry_date, '%Y-%m-%d')
+    expiry_date = expiry_date.strftime('%y%m%d')
+    strike_price = '{:0>8}'.format(int(strike_price) * 1000)
+    option_symbol = f'{symbol}{expiry_date}{option_type}{strike_price}'
+
+    url = 'https://api.marketdata.app/v1/options/quotes/'
+    #type = '?date='
+    #date_format = 'timestamp'
+    headers = {'Authorization': api_key.API_KEY}
+
+    path = f'{option_symbol}/?dateformat=timestamp'
+    final_url = url + path
+
+    chain_response = requests.get(final_url, headers=headers)
+    return chain_response.text
+
+    #print(final_url)
+
+
 
 def get_candles_from_to(symbol, from_date, to_date, res):
     # mf.get_candles('MSFT', '2023-02-03', '2023-02-04', 'D')
