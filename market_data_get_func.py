@@ -12,8 +12,7 @@ from datetime import datetime
 import api_key
 
 def build_option_symbol(symbol, expiry_date, option_type, strike_price):
-
-    # build_option_symbol('IBM', '2023-02-10', 'C', '140')
+    
     """
     Get Live quotes of an option from a beginning date.
 
@@ -31,17 +30,34 @@ def build_option_symbol(symbol, expiry_date, option_type, strike_price):
 
     return option_symbol
 
+def get_option_chain_live(symbol):
+    """
+    get_options_chain_live('AAPL')
+    symbol         :'AAPL'
+    """
+    # https://api.marketdata.app/v1/options/chain/AAPL/?dateformat=timestamp
+
+    url = 'https://api.marketdata.app/v1/options/chain/' 
+ 
+    headers = {'Authorization': api_key.API_KEY}
+    path = f'{symbol}/??dateformat=timestamp'
+    final_url = url + path
+    chain_expr = requests.get(final_url, headers=headers)
+    
+    return chain_expr.text
+
 def get_options_chain_expr(symbol, expiry_date):
-    # mf.get_options_chainbyExpr('SPXW', '2023-02-17')
+    """
+    get_options_chain_expr('AAPL', '2023-02-17')
+    symbol         :'AAPL'
+    expiry_date    :'2023-02-17'
+    """
 
     url = 'https://api.marketdata.app/v1/options/chain/'
-    
-    #expiry_date = datetime.strptime(expiry_date, '%Y-%m-%d')
-    #expiry_date = expiry_date.strftime('%y%m%d')
+        
     date_format = 'timestamp'
     headers = {'Authorization': api_key.API_KEY}
     
-
     path = f'{symbol}/?exiration={expiry_date}&dateformat=timestamp'
 
     final_url = url + path
@@ -50,8 +66,12 @@ def get_options_chain_expr(symbol, expiry_date):
     return chain_expr.text
 
 def get_options_chain_weekly(symbol):
-    # mf.get_options_chainbyMonth('SPX')
-    #https://api.marketdata.app/v1/options/chain/AAPL/?monthly=false&dateformat=timestamp
+    """
+    get_options_chain_weekly('SPX')
+    symbol:     :'SPX'
+
+    """
+    # https://api.marketdata.app/v1/options/chain/AAPL/?monthly=false&dateformat=timestamp
     
     url = 'https://api.marketdata.app/v1/options/chain/'  #AAPL/?monthly=true&dateformat=timestamp
     
@@ -65,8 +85,11 @@ def get_options_chain_weekly(symbol):
     return chain_expr.text
 
 def get_options_chain_monthly(symbol):
-    # mf.get_options_chainbyWeek('SPX')
-    #https://api.marketdata.app/v1/options/chain/AAPL/?monthly=true&dateformat=timestamp
+    """
+    get_options_chain_monthly('SPX')
+    symbol:     :'SPX'
+    """
+    # https://api.marketdata.app/v1/options/chain/AAPL/?monthly=true&dateformat=timestamp
     
     url = 'https://api.marketdata.app/v1/options/chain/'  #AAPL/?monthly=true&dateformat=timestam
     
@@ -79,13 +102,14 @@ def get_options_chain_monthly(symbol):
     chain_expr = requests.get(final_url, headers=headers)
     return chain_expr.text
 
-
 def get_options_chain_year(symbol, year):
-    # mf.get_options_chainbyWeek('SPX')
+    """
+    get_options_chain_year('IBM')
+    symbol:     :'IBM'
+    """
     # https://api.marketdata.app/v1/options/chain/AAPL/?year=2022&dateformat=timestamp
     
-    url = 'https://api.marketdata.app/v1/options/chain/'  #AAPL/?monthly=true&dateformat=timestam
-    
+    url = 'https://api.marketdata.app/v1/options/chain/'  #AAPL/?monthly=true&dateformat=timestamp    
     
     headers = {'Authorization': api_key.API_KEY}
 
@@ -95,14 +119,16 @@ def get_options_chain_year(symbol, year):
     chain_expr = requests.get(final_url, headers=headers)
     return chain_expr.text
 
-
 def get_options_chain_strike(symbol, strike):
-    # mf.get_options_chainbyWeek('SPX')
-    #https://api.marketdata.app/v1/options/chain/AAPL/?strike=150&dateformat=timestamp
+    """
+    get_options_chain_strike('IBM', '150')
+    symbol      :'IBM'
+    strike      :'150'
+    """
+    # https://api.marketdata.app/v1/options/chain/AAPL/?strike=150&dateformat=timestamp
     
     url = 'https://api.marketdata.app/v1/options/chain/'  #AAPL/?monthly=true&dateformat=timest
-    
-    
+        
     headers = {'Authorization': api_key.API_KEY}
 
     path = f'{symbol}/?strike={strike}&dateformat=timestamp'
@@ -112,13 +138,16 @@ def get_options_chain_strike(symbol, strike):
     return chain_expr.text
 
 def get_hist_quotes_from_to(symbol_list, from_date, to_date):
-
+    """
+    get_options_chain_strike(spx_list, '2023-01-26', '2023-02-04')
+    symbol_list      :['SPX230217C04100000','SPX230217P04100000']
+    from_date        :'2023-01-26'
+    to_date          :'2023-02-04'
+    """
     # This function still needs a bit of work.  Getting an error message when going to far out on the term.  thinking it may be that
-    # the OptionSymbol is listed, but no quote...  Need to study future...  But Seems to work ok except for those exceptions at the moment.
+    # the OptionSymbol is listed, but no quote...  Need to study future...  But Seems to work ok except for those exceptions.
 
-    # mf.get_hist_quotes_to_from(spx_list, '2023-01-26', '2023-02-04')
-    
-    #https://api.marketdata.app/v1/options/quotes/AAPL250117C00150000/?from=2023-01-01&to=2023-01-31&dateformat=timestamp
+    # https://api.marketdata.app/v1/options/quotes/AAPL250117C00150000/?from=2023-01-01&to=2023-01-31&dateformat=timestamp
     
     url = 'https://api.marketdata.app/v1/options/quotes/'
     
@@ -157,6 +186,59 @@ def get_hist_quotes_from_to(symbol_list, from_date, to_date):
                          'extrinsicValue': data.get('extrinsicValue', np.nan),
                          'underlyingPrice': data.get('underlyingPrice', np.nan)})
 
+        # Add a new column to symbol_df with the id and date values concatenated
+        symbol_df['id'] = symbol + '_' + symbol_df['updated'].astype(str)
+        # Use the new column as the index when concatenating with df
+        df = pd.concat([df, symbol_df.set_index('id')], ignore_index=False, sort=False, axis=0)
+    return df
+
+def get_hist_quotes_from(symbol_list, from_date):
+    """
+    get_options_chain_strike(spx_list, '2023-01-26')
+    symbol_list      :['SPX230217C04100000','SPX230217P04100000']
+    from_date        :'2023-01-26'
+    """
+    # This function still needs a bit of work.  Getting an error message when going to far out on the term.  th
+    # the OptionSymbol is listed, but no quote...  Need to study future...  But Seems to work ok except for tho
+
+    # https://api.marketdata.app/v1/options/quotes/AAPL250117C00150000/?from=2023-01-01&to=2023-01-31&dateformat=timestamp
+    
+    url = 'https://api.marketdata.app/v1/options/quotes/'
+    
+    headers = {'Authorization': api_key.API_KEY}
+
+    symbols = symbol_list
+
+    # Initialize an empty DataFrame to hold the data
+    df = pd.DataFrame()
+
+    # Iterate through the symbols, making a request for each one
+    for symbol in symbols:
+        # Build the path by concatenating the symbol, date and date_format
+        path = f'{symbol}/?from={from_date}&dateformat=timestamp'
+        # Concatenate the base URL and the path
+        final_url = url + path
+        # Make the request
+    
+        response = requests.get(final_url, headers=headers)
+        # Extract the data from the response
+        data = response.json()
+        
+        # Create a new DataFrame with the data and a column for the symbol
+        symbol_df = pd.DataFrame({'updated': data.get('updated', np.nan),
+                         'symbol': symbol,
+                         'bid': data.get('bid', np.nan),
+                         'bidSize': data.get('bidSize', np.nan),
+                         'mid': data.get('mid', np.nan),
+                         'ask': data.get('ask',np.nan),
+                         'askSize': data.get('askSize', np.nan),
+                         'last': data.get('last', np.nan),
+                         'openInterest': data.get('openInterest', np.nan),
+                         'volume': data.get('volume', np.nan),
+                         'inTheMoney': data.get('inTheMoney', np.nan),
+                         'intrinsicValue': data.get('intrinsicValue', np.nan),
+                         'extrinsicValue': data.get('extrinsicValue', np.nan),
+                         'underlyingPrice': data.get('underlyingPrice', np.nan)})
 
         # Add a new column to symbol_df with the id and date values concatenated
         symbol_df['id'] = symbol + '_' + symbol_df['updated'].astype(str)
@@ -165,18 +247,14 @@ def get_hist_quotes_from_to(symbol_list, from_date, to_date):
     return df
 
 
-
 def get_options_quote_live(symbol, expiry_date, option_type, strike_price):
-
-    # get_options_quote_live('IBM', '2023-02-10', 'C', '140')
     """
     Get Live quotes of an option from a beginning date.
-
+    example       : options_quote_live('IBM', '2023-02-10', 'C', '140')
     symbol        : Symbol of the underlying asset
     expiry_date   : Expiry date of the option in the format 'YYYY-MM-DD'
     option_type   : Option type, either 'C' (Call) or 'P' (Put)
-    strike_price  : Strike price of the option
-    
+    strike_price  : Strike price of the option    
         
     Returns:
         JSON response from the API.
@@ -187,8 +265,7 @@ def get_options_quote_live(symbol, expiry_date, option_type, strike_price):
     option_symbol = f'{symbol}{expiry_date}{option_type}{strike_price}'
 
     url = 'https://api.marketdata.app/v1/options/quotes/'
-    #type = '?date='
-    #date_format = 'timestamp'
+    
     headers = {'Authorization': api_key.API_KEY}
 
     path = f'{option_symbol}/?dateformat=timestamp'
@@ -199,24 +276,20 @@ def get_options_quote_live(symbol, expiry_date, option_type, strike_price):
 
     #print(final_url)
 
-
-
 def get_candles_from_to(symbol, from_date, to_date, res):
-    # mf.get_candles('MSFT', '2023-02-03', '2023-02-04', 'D')
-    
+    """
+    :get_candles('MSFT', '2023-02-03', '2023-02-04', 'D')
+    :Date Format: ('2023-01-15')
+    :Minutely Resolutions: (minutely, 1, 3, 5, 15, 30, 45, ...)
+    :Hourly Resolutions: (hourly, H, 1H, 2H, ...)
+    :Daily Resolutions: (daily, D, 1D, 2D, ...)
+    :Weekly Resolutions: (weekly, W, 1W, 2W, ...)
+    :Monthly Resolutions: (monthly, M, 1M, 2M, ...)
+    :Yearly Resolutions:(yearly, Y, 1Y, 2Y, ...)
+    """
     # https://api.marketdata.app/v1/stocks/candles/D/AAPL?from=2020-01-01&to=2020-12-31
 
-    """ :Date Format: ('2023-01-15')
-        :Minutely Resolutions: (minutely, 1, 3, 5, 15, 30, 45, ...)
-        :Hourly Resolutions: (hourly, H, 1H, 2H, ...)
-        :Daily Resolutions: (daily, D, 1D, 2D, ...)
-        :Weekly Resolutions: (weekly, W, 1W, 2W, ...)
-        :Monthly Resolutions: (monthly, M, 1M, 2M, ...)
-        :Yearly Resolutions:(yearly, Y, 1Y, 2Y, ...)
-    """
-        
-    url = 'https://api.marketdata.app/v1/stocks/candles/'  #AAPL/?monthly=true&dateformat=timestamp
-    
+    url = 'https://api.marketdata.app/v1/stocks/candles/'  #AAPL/?monthly=true&dateformat=timestamp    
     
     headers = {'Authorization': api_key.API_KEY}
 
@@ -245,21 +318,17 @@ def get_candles_from_to(symbol, from_date, to_date, res):
 
 
 def get_candles_from(symbol, from_date, res):
-    # mf.get_candles('MSFT', '2020-02-03','D')
-    
-    # url2 = "https://api.marketdata.app/v1/stocks/candles/D/AAPL?from=2020-12-31&countback=252"
-
-    """ :Date Format: ('2023-01-15')
-        :Minutely Resolutions: (minutely, 1, 3, 5, 15, 30, 45, ...)
-        :Hourly Resolutions: (hourly, H, 1H, 2H, ...)
-        :Daily Resolutions: (daily, D, 1D, 2D, ...)
-        :Weekly Resolutions: (weekly, W, 1W, 2W, ...)
-        :Monthly Resolutions: (monthly, M, 1M, 2M, ...)
-        :Yearly Resolutions:(yearly, Y, 1Y, 2Y, ...)
     """
-        
-    url = 'https://api.marketdata.app/v1/stocks/candles/'  #AAPL/?monthly=true&dateformat=timestamp
-    
+    :get_candles('MSFT', '2023-02-03', '2023-02-04', 'D')
+    :Date Format: ('2023-01-15')
+    :Minutely Resolutions: (minutely, 1, 3, 5, 15, 30, 45, ...)
+    :Hourly Resolutions: (hourly, H, 1H, 2H, ...)
+    :Daily Resolutions: (daily, D, 1D, 2D, ...)
+    :Weekly Resolutions: (weekly, W, 1W, 2W, ...)
+    :Monthly Resolutions: (monthly, M, 1M, 2M, ...)
+    :Yearly Resolutions:(yearly, Y, 1Y, 2Y, ...)
+    """        
+    url = 'https://api.marketdata.app/v1/stocks/candles/'  #AAPL/?monthly=true&dateformat=timestamp    
     
     headers = {'Authorization': api_key.API_KEY}
 
