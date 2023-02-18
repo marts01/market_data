@@ -46,6 +46,28 @@ def get_option_chain_live(symbol):
     
     return chain_expr.text
 
+def get_options_chain_from(symbol, from_date):
+    """
+    get_options_chain_expr('AAPL', '2023-02-17')
+    symbol         :'AAPL'
+    from_date    :'2023-02-17'
+    """
+
+    #https://api.marketdata.app/v1/options/chain/AAPL/?date=2020-01-06&dateformat=timestamp
+
+    url = 'https://api.marketdata.app/v1/options/chain/'
+        
+    date_format = 'timestamp'
+    headers = {'Authorization': api_key.API_KEY}
+    
+    path = f'{symbol}/?date={from_date}&dateformat=timestamp'
+
+    final_url = url + path
+    chain_expr = requests.get(final_url, headers=headers)
+
+    return chain_expr.text
+
+
 def get_options_chain_expr(symbol, expiry_date):
     """
     get_options_chain_expr('AAPL', '2023-02-17')
@@ -53,12 +75,14 @@ def get_options_chain_expr(symbol, expiry_date):
     expiry_date    :'2023-02-17'
     """
 
+    # https://api.marketdata.app/v1/options/chain/AAPL/?expiration=2024-01-19&dateformat=timestamp
+
     url = 'https://api.marketdata.app/v1/options/chain/'
         
     date_format = 'timestamp'
     headers = {'Authorization': api_key.API_KEY}
     
-    path = f'{symbol}/?exiration={expiry_date}&dateformat=timestamp'
+    path = f'{symbol}/?expiration={expiry_date}&dateformat=timestamp'
 
     final_url = url + path
     chain_expr = requests.get(final_url, headers=headers)
@@ -104,8 +128,9 @@ def get_options_chain_monthly(symbol):
 
 def get_options_chain_year(symbol, year):
     """
-    get_options_chain_year('IBM')
-    symbol:     :'IBM'
+    get_options_chain_year('IBM', '2022')
+    symbol      :'IBM'
+    year        :'2023'
     """
     # https://api.marketdata.app/v1/options/chain/AAPL/?year=2022&dateformat=timestamp
     
@@ -276,9 +301,10 @@ def get_options_quote_live(symbol, expiry_date, option_type, strike_price):
 
     #print(final_url)
 
-def get_candles_from_to(symbol, from_date, to_date, res):
+def get_candles_from_to(switch, symbol, from_date, to_date, res):
     """
-    :get_candles('MSFT', '2023-02-03', '2023-02-04', 'D')
+    :get_candles('s', 'MSFT', '2023-02-03', '2023-02-04', 'D')
+    :switch     : 's', stocks | 'i', indices
     :Date Format: ('2023-01-15')
     :Minutely Resolutions: (minutely, 1, 3, 5, 15, 30, 45, ...)
     :Hourly Resolutions: (hourly, H, 1H, 2H, ...)
@@ -287,10 +313,20 @@ def get_candles_from_to(symbol, from_date, to_date, res):
     :Monthly Resolutions: (monthly, M, 1M, 2M, ...)
     :Yearly Resolutions:(yearly, Y, 1Y, 2Y, ...)
     """
+
+    def url_switch(switch):
+        if switch == 's':
+            url = 'https://api.marketdata.app/v1/stocks/candles/'
+        elif switch == 'i':
+            url = 'https://api.marketdata.app/v1/indices/candles/'
+        else:
+            return "Invalid switch parameter"
+        return url
+
     # https://api.marketdata.app/v1/stocks/candles/D/AAPL?from=2020-01-01&to=2020-12-31
 
-    url = 'https://api.marketdata.app/v1/stocks/candles/'  #AAPL/?monthly=true&dateformat=timestamp    
-    
+    url = url_switch(switch)
+
     headers = {'Authorization': api_key.API_KEY}
 
     path = f'{res}/{symbol}/?from={from_date}&to={to_date}&dateformat=timestamp'
@@ -317,9 +353,10 @@ def get_candles_from_to(symbol, from_date, to_date, res):
     return candles_hist
 
 
-def get_candles_from(symbol, from_date, res):
+def get_candles_from(switch, symbol, from_date, res):
     """
-    :get_candles('MSFT', '2023-02-03', '2023-02-04', 'D')
+    :get_candles('s', 'MSFT', '2023-02-03', 'D')
+    :switch     : 's', stocks | 'i', indices
     :Date Format: ('2023-01-15')
     :Minutely Resolutions: (minutely, 1, 3, 5, 15, 30, 45, ...)
     :Hourly Resolutions: (hourly, H, 1H, 2H, ...)
@@ -327,12 +364,25 @@ def get_candles_from(symbol, from_date, res):
     :Weekly Resolutions: (weekly, W, 1W, 2W, ...)
     :Monthly Resolutions: (monthly, M, 1M, 2M, ...)
     :Yearly Resolutions:(yearly, Y, 1Y, 2Y, ...)
-    """        
-    url = 'https://api.marketdata.app/v1/stocks/candles/'  #AAPL/?monthly=true&dateformat=timestamp    
+    """
+
+    def url_switch(switch):
+        if switch == 's':
+            url = 'https://api.marketdata.app/v1/stocks/candles/'
+        elif switch == 'i':
+            url = 'https://api.marketdata.app/v1/indices/candles/'
+        else:
+            return "Invalid switch parameter"
+        return url
+
+    # url = 'https://api.marketdata.app/v1/stocks/candles/'
+
+    url = url_switch(switch)
+
+    # https://api.marketdata.app/v1/stocks/candles/D/AAPL/?from=2023-02-01&dateformat=timestamp  
     
     headers = {'Authorization': api_key.API_KEY}
 
-    #path = f'{res}/{symbol}/?from={from_date}&countback={count_back}&dateformat=timestamp'
     path = f'{res}/{symbol}/?from={from_date}&dateformat=timestamp'
 
     final_url = url + path
