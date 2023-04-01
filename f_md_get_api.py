@@ -11,24 +11,30 @@ import json
 from datetime import datetime
 import api_key
 
-def build_option_symbol(symbol, expiry_date, option_type, strike_price):
+def build_option_symbol(symbol, expiry_date, option_type, strike):
     
-    """
-    Get Live quotes of an option from a beginning date.
+	"""
+	Build an Option Symbol
 
-    example       : build_option_symbol('IBM', '2023-02-10', 'C', '140')
-    symbol        : Symbol of the underlying asset
-    expiry_date   : Expiry date of the option in the format 'YYYY-MM-DD'
-    option_type   : Option type, either 'C' (Call) or 'P' (Put)
-    strike_price  : Strike price of the option
-          
-    """
-    expiry_date = datetime.strptime(expiry_date, '%Y-%m-%d')
-    expiry_date = expiry_date.strftime('%y%m%d')
-    strike_price = '{:0>8}'.format(int(strike_price) * 1000)
-    option_symbol = f'{symbol}{expiry_date}{option_type}{strike_price}'
+	example       : build_option_symbol('IBM', '2023-02-10', 'C', 140)
+	symbol        : Symbol of the underlying asset
+	expiry_date   : Expiry date of the option in the format 'YYYY-MM-DD'
+	option_type   : Option type, either 'C' (Call) or 'P' (Put)
+	strike_price  : Strike price of the option, enter as number ('no quotes', ie 100)
+			  
+	"""
+	# Remove hyphens from the expiry date
+	expiry_date = expiry_date.replace('-', '')
 
-    return option_symbol
+	# Format the year as '23'
+	year_formatted = expiry_date[2:]
+
+	# Pad the strike price to a 7-digit string with leading zeroes
+	# By converting to cents and padding it with a 0
+	strike_formatted = f"{int(strike * 100):07d}0"
+
+	option_symbol = f'{symbol}{year_formatted}{option_type[0].upper()}{strike_formatted}'
+	return option_symbol
 
 def get_option_chain_live(symbol):
     """
@@ -40,7 +46,7 @@ def get_option_chain_live(symbol):
     url = 'https://api.marketdata.app/v1/options/chain/' 
  
     headers = {'Authorization': api_key.API_KEY}
-    path = f'{symbol}/??dateformat=timestamp'
+    path = f'{symbol}/?dateformat=timestamp'
     final_url = url + path
     chain_expr = requests.get(final_url, headers=headers)
     
@@ -70,6 +76,9 @@ def get_options_chain_from(symbol, from_date):
 
 def get_options_chain_expr(symbol, expiry_date):
     """
+	Current Option Chains, See
+	get_options_chain_expr_from(symbol, expiry_date, from_date
+	for Expr Chains
     get_options_chain_expr('AAPL', '2023-02-17')
     symbol         :'AAPL'
     expiry_date    :'2023-02-17'
@@ -88,6 +97,33 @@ def get_options_chain_expr(symbol, expiry_date):
     chain_expr = requests.get(final_url, headers=headers)
 
     return chain_expr.text
+	
+def get_options_chain_expr_from(symbol, expiry_date, from_date):
+    """
+	Expired Option Chains, See
+	get_options_chain_expr(symbol, expiry_date)
+	for Current Chains
+    get_options_chain_expr('AAPL', '2023-02-17')
+    symbol         :'AAPL'
+    expiry_date    :'2023-02-17'
+    """
+
+    # https://api.marketdata.app/v1/options/chain/AAPL/?expiration=2024-01-19&dateformat=timestamp  #Current Chains
+	# https://api.marketdata.app/v1/options/chain/AAPL/?expiration=2023-03-10&date=2023-03-10&dateformat=timestamp  #Expr Chains
+
+    url = 'https://api.marketdata.app/v1/options/chain/'
+        
+    date_format = 'timestamp'
+    headers = {'Authorization': api_key.API_KEY}
+    
+    path = f'{symbol}/?expiration={expiry_date}&date={from_date}&dateformat=timestamp'
+
+    final_url = url + path
+    chain_expr = requests.get(final_url, headers=headers)
+
+    return chain_expr.text	
+	
+	
 
 def get_options_chain_weekly(symbol):
     """
@@ -269,6 +305,7 @@ def get_hist_quotes_from(symbol_list, from_date):
         symbol_df['id'] = symbol + '_' + symbol_df['updated'].astype(str)
         # Use the new column as the index when concatenating with df
         df = pd.concat([df, symbol_df.set_index('id')], ignore_index=False, sort=False, axis=0)
+        
     return df
 
 
@@ -405,3 +442,33 @@ def get_candles_from(switch, symbol, from_date, res):
     candles_hist.drop(['s'], axis=1, inplace=True)
     candles_hist = candles_hist.reindex(columns=['symbol','date', 'close', 'high', 'low', 'open', 'volume'])
     return candles_hist
+
+
+def get_stock_quote_live(switch, symbol):
+    """
+    get_stock_quote_live('s', 'AAPL')
+
+    switch         :'s', stock | 'i', indices
+    symbol         :'AAPL'
+    """
+    def url_switch(switch):
+        if switch == 's':
+            url = 'https://api.marketdata.app/v1/stocks/quotes/'
+        elif switch == 'i':
+            url = 'https://api.marketdata.app/v1/indices/quotes/'
+        else:
+            return "Invalid switch parameter"
+        return url
+
+
+
+    # https://api.marketdata.app/v1/stocks/quotes/AAPL/?dateformat=timestamp
+
+    url = url_switch(switch)
+ 
+    headers = {'Authorization': api_key.API_KEY}
+    path = f'{symbol}/?dateformat=timestamp'
+    final_url = url + path
+    chain_expr = requests.get(final_url, headers=headers)
+    
+    return chain_expr.text
